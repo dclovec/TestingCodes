@@ -5,10 +5,10 @@ var SearchBox = React.createClass({
     render: function () {
     	return (
     		<div className="searchBox">
-    			<input type="text" placeholdre="Search..." className="searchTxt" onChange={this.onSearchTxtChangedEvt} />
+    			<input type="text" placeholder="Search..." className="searchTxt" onChange={this.onSearchTxtChangedEvt} />
     			<br />
     			<input type="checkbox" id="onlyCheck" className="isOnlyStocked" onClick={this.onlyStockedClicked} checked={this.state.onlyStocked} />
-    			<label htmlFor="onlyCheck">Only show stocked</label>
+    			<label htmlFor="onlyCheck"  style={{'{{'}}background: "#00f"}}>Only show stocked</label>
     		</div>
     	);
     },
@@ -35,6 +35,7 @@ var SearchBox = React.createClass({
         };
     }(null, window)
 }),
+ReactCSSTransitionGroup=React.addons.CSSTransitionGroup,
     ProductInfo = React.createClass({
     getInitialState: function () {
         return { data: [] };
@@ -50,7 +51,7 @@ var SearchBox = React.createClass({
         	shownCount.hasOwnProperty(cat)?(shownCount[cat]++):(shownCount[cat]=1,cats[cat]=[]);
         	item.hidden && (shownCount[cat]--);
         	
-        	cats[cat].push(
+        	!item.hidden && cats[cat].push(
         		<tr key={item.name} style={item.hidden?{display:"none"}:null}>
         			<td style={item.stocked ? null : { color: "#f00" }}>{item.name}</td>
         			<td>{item.price}</td>
@@ -59,12 +60,12 @@ var SearchBox = React.createClass({
         });
         for(key in shownCount){
         	if(shownCount.hasOwnProperty(key)){
-        		nodes.push(
+        		0<shownCount[key] && nodes.push(
         			<tr key={key} style={0===shownCount[key]?{display:"none"}:null}>
         				<th>{key}</th>
-        			</tr>
+        			</tr>,
+        			cats[key]
         		);
-        		nodes=nodes.concat(cats[key]);
         	}
         }
 
@@ -78,9 +79,9 @@ var SearchBox = React.createClass({
         					<td>Price</td>
         				</tr>
         			</thead>
-        			<tbody>
-	        			{nodes}
-    				</tbody>
+    				<ReactCSSTransitionGroup component="tbody" transitionName="example" transitionEnterTimeout={500} transitionLeaveTimeout={300}>
+        				{nodes}
+        			</ReactCSSTransitionGroup>
         		</table>
         	</div>
         );
@@ -88,6 +89,7 @@ var SearchBox = React.createClass({
     componentDidMount: function () {
     	var data = [{ category: "Sporting Goods", price: "$49.99", stocked: true, name: "Football" }, { category: "Sporting Goods", price: "$9.99", stocked: true, name: "Baseball" }, { category: "Sporting Goods", price: "$29.99", stocked: false, name: "Basketball" }, { category: "Sporting Goods", price: "$29.99", stocked: false, name: "ipps" }, { category: "Electronics", price: "$99.99", stocked: true, name: "iPod Touch" }, { category: "Electronics", price: "$399.99", stocked: false, name: "iPhone 5" }, { category: "Electronics", price: "$199.99", stocked: true, name: "Nexus 7" }];
         this.setState({ data: data });
+        
     },
     onSearchInfoChanged: function (info) {
         var shown = this.state.data,

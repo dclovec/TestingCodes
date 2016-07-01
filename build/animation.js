@@ -6,7 +6,7 @@ var SearchBox = React.createClass({
         return React.createElement(
             "div",
             { className: "searchBox" },
-            React.createElement("input", { type: "text", placeholdre: "Search...", className: "searchTxt", onChange: this.onSearchTxtChangedEvt }),
+            React.createElement("input", { type: "text", placeholder: "Search...", className: "searchTxt", onChange: this.onSearchTxtChangedEvt }),
             React.createElement("br", null),
             React.createElement("input", { type: "checkbox", id: "onlyCheck", className: "isOnlyStocked", onClick: this.onlyStockedClicked, checked: this.state.onlyStocked }),
             React.createElement(
@@ -38,6 +38,7 @@ var SearchBox = React.createClass({
         };
     }(null, window)
 }),
+    ReactCSSTransitionGroup = React.addons.CSSTransitionGroup,
     ProductInfo = React.createClass({
     getInitialState: function () {
         return { data: [] };
@@ -53,7 +54,7 @@ var SearchBox = React.createClass({
             shownCount.hasOwnProperty(cat) ? shownCount[cat]++ : (shownCount[cat] = 1, cats[cat] = []);
             item.hidden && shownCount[cat]--;
 
-            cats[cat].push(React.createElement(
+            !item.hidden && cats[cat].push(React.createElement(
                 "tr",
                 { key: item.name, style: item.hidden ? { display: "none" } : null },
                 React.createElement(
@@ -70,7 +71,7 @@ var SearchBox = React.createClass({
         });
         for (key in shownCount) {
             if (shownCount.hasOwnProperty(key)) {
-                nodes.push(React.createElement(
+                0 < shownCount[key] && nodes.push(React.createElement(
                     "tr",
                     { key: key, style: 0 === shownCount[key] ? { display: "none" } : null },
                     React.createElement(
@@ -78,8 +79,7 @@ var SearchBox = React.createClass({
                         null,
                         key
                     )
-                ));
-                nodes = nodes.concat(cats[key]);
+                ), cats[key]);
             }
         }
 
@@ -109,8 +109,8 @@ var SearchBox = React.createClass({
                     )
                 ),
                 React.createElement(
-                    "tbody",
-                    null,
+                    ReactCSSTransitionGroup,
+                    { component: "tbody", transitionName: "example", transitionEnterTimeout: 500, transitionLeaveTimeout: 300 },
                     nodes
                 )
             )
@@ -119,6 +119,12 @@ var SearchBox = React.createClass({
     componentDidMount: function () {
         var data = [{ category: "Sporting Goods", price: "$49.99", stocked: true, name: "Football" }, { category: "Sporting Goods", price: "$9.99", stocked: true, name: "Baseball" }, { category: "Sporting Goods", price: "$29.99", stocked: false, name: "Basketball" }, { category: "Sporting Goods", price: "$29.99", stocked: false, name: "ipps" }, { category: "Electronics", price: "$99.99", stocked: true, name: "iPod Touch" }, { category: "Electronics", price: "$399.99", stocked: false, name: "iPhone 5" }, { category: "Electronics", price: "$199.99", stocked: true, name: "Nexus 7" }];
         this.setState({ data: data });
+
+        var dcopy = React.addons.update;
+        var arr = [1, 2];
+        var arr1 = dcopy(arr, {});
+        arr1[0] = "c";
+        console.log(arr, arr1);
     },
     onSearchInfoChanged: function (info) {
         var shown = this.state.data,
