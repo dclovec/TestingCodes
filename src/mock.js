@@ -1,5 +1,3 @@
-var data = [{ category: "Sporting Goods", price: "$49.99", stocked: true, name: "Football" }, { category: "Sporting Goods", price: "$9.99", stocked: true, name: "Baseball" }, { category: "Sporting Goods", price: "$29.99", stocked: false, name: "Basketball" }, { category: "Sporting Goods", price: "$29.99", stocked: false, name: "ipps" }, { category: "Electronics", price: "$99.99", stocked: true, name: "iPod Touch" }, { category: "Electronics", price: "$399.99", stocked: false, name: "iPhone 5" }, { category: "Electronics", price: "$199.99", stocked: true, name: "Nexus 7" }];
-
 var SearchBox = React.createClass({
     getInitialState: function () {
         return { onlyStocked: false, searchTxt: "" };
@@ -10,7 +8,7 @@ var SearchBox = React.createClass({
     			<input type="text" placeholdre="Search..." className="searchTxt" onChange={this.onSearchTxtChangedEvt} />
     			<br />
     			<input type="checkbox" id="onlyCheck" className="isOnlyStocked" onClick={this.onlyStockedClicked} checked={this.state.onlyStocked} />
-    			<label for="onlyCheck">Only show stocked</label>
+    			<label htmlFor="onlyCheck">Only show stocked</label>
     		</div>
     	);
     },
@@ -43,90 +41,67 @@ var SearchBox = React.createClass({
     },
     render: function () {
         var cats = {},
-            index = 0,
-            nodes;
-        this.state.data.map(function (item) {
-            var cat, html;
-            if (!((cat = item.category) in cats) || !cats.hasOwnProperty(cat)) {
-                html = React.createElement(
-                    "tr",
-                    { key: index++ },
-                    React.createElement(
-                        "th",
-                        null,
-                        cat
-                    )
-                );
-                cats[cat] = [html];
-            }
-            cats[cat].push(React.createElement(
-                "tr",
-                { key: index++ },
-                React.createElement(
-                    "td",
-                    { style: item.stocked ? null : { color: "#f00" } },
-                    item.name
-                ),
-                React.createElement(
-                    "td",
-                    null,
-                    item.price
-                )
-            ));
+        	shownCount={},
+            nodes=[],
+            data=this.state.data,
+            key;
+        data.forEach(function (item) {
+        	var cat=item.category;
+        	shownCount.hasOwnProperty(cat)?(shownCount[cat]++):(shownCount[cat]=1,cats[cat]=[]);
+        	item.hidden && (shownCount[cat]--);
+        	
+        	cats[cat].push(
+        		<tr key={item.name} style={item.hidden?{display:"none"}:null}>
+        			<td style={item.stocked ? null : { color: "#f00" }}>{item.name}</td>
+        			<td>{item.price}</td>
+        		</tr>
+        	);
         });
-        nodes = [];
-        for (var key in cats) {
-            if (cats.hasOwnProperty(key)) {
-                nodes = nodes.concat(cats[key]);
-            }
+        for(key in shownCount){
+        	if(shownCount.hasOwnProperty(key)){
+        		nodes.push(
+        			<tr key={key} style={0===shownCount[key]?{display:"none"}:null}>
+        				<th>{key}</th>
+        			</tr>
+        		);
+        		nodes=nodes.concat(cats[key]);
+        	}
         }
 
-        return React.createElement(
-            "div",
-            { className: "productInfos" },
-            React.createElement(SearchBox, { onSearchChanged: this.onSearchInfoChanged }),
-            React.createElement(
-                "table",
-                { className: "productList" },
-                React.createElement(
-                    "thead",
-                    null,
-                    React.createElement(
-                        "tr",
-                        null,
-                        React.createElement(
-                            "th",
-                            null,
-                            "Name"
-                        ),
-                        React.createElement(
-                            "th",
-                            null,
-                            "Price"
-                        )
-                    )
-                ),
-                React.createElement(
-                    "tbody",
-                    null,
-                    nodes
-                )
-            )
+        return (
+        	<div className="productInfos">
+        		<SearchBox onSearchChanged={this.onSearchInfoChanged} />
+        		<table className="productList">
+        			<thead>
+        				<tr>
+        					<td>Name</td>
+        					<td>Price</td>
+        				</tr>
+        			</thead>
+        			<tbody>
+        				{nodes}
+        			</tbody>
+        		</table>
+        	</div>
         );
     },
     componentDidMount: function () {
-        this.setState({ data: this.allData = data });
+    	var data = [{ category: "Sporting Goods", price: "$49.99", stocked: true, name: "Football" }, { category: "Sporting Goods", price: "$9.99", stocked: true, name: "Baseball" }, { category: "Sporting Goods", price: "$29.99", stocked: false, name: "Basketball" }, { category: "Sporting Goods", price: "$29.99", stocked: false, name: "ipps" }, { category: "Electronics", price: "$99.99", stocked: true, name: "iPod Touch" }, { category: "Electronics", price: "$399.99", stocked: false, name: "iPhone 5" }, { category: "Electronics", price: "$199.99", stocked: true, name: "Nexus 7" }];
+        this.setState({ data: data });
     },
     onSearchInfoChanged: function (info) {
-        var shown = this.allData,
+        var shown = this.state.data,
             onlyStocked = info.onlyStocked,
             searchTxt = info.searchTxt;
         searchTxt = typeof searchTxt === "string" && searchTxt.length > 0 && new RegExp(searchTxt, "i") || null;
-        shown = shown.filter(function (item) {
-            return (onlyStocked ? item.stocked : true) && (!searchTxt || searchTxt.test(item.category) || searchTxt.test(item.price) || searchTxt.test(item.name));
+        shown.forEach(function (item) {
+            item.hidden=!((onlyStocked ? item.stocked : true) && (!searchTxt || searchTxt.test(item.category) || searchTxt.test(item.price) || searchTxt.test(item.name)));
         });
         this.setState({ data: shown });
     }
 });
 
-ReactDOM.render(React.createElement(ProductInfo, null), container);
+ReactDOM.render(
+	<ProductInfo />, 
+	container
+);
