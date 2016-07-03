@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title>EarthWar</title>
+		<style type="text/css">
+			html,body{
+				height: 100%;
+				padding: 0;
+				margin: 0;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div id="container"></div>
+
+		<script type="text/javascript">
+			function log() {
+				var arg="";
+				for(var i=0,len=arguments.length;i<len;i++){
+					arg+=JSON.stringify(arguments[i])+"\t";
+				}
+				container.innerHTML+="<p>"+arg+"</p>";
+			}
+			function geoConv(coords) {
+				var lng=coords.longitude,
+					lat=coords.latitude,
+					script=document.createElement("script");
+				script.async=true;
+				script.onerror=function (e) {
+					log("error get convertted geolocation from baidu:",e);
+				};
+				script.src="http://api.map.baidu.com/geoconv/v1/?coords="+lng+","+lat+"&from=1&to=5&ak=27WpZtvmsCkUNPOrDuq3BrxuFCypaPX8&callback=getBaiduGeo";
+				document.body.appendChild(script);
+			}
+			function getBaiduGeo (bdGeo) {
+				bdGeo=bdGeo.result[0];
+				bdGeo={
+					bdLng:""+bdGeo.x,
+					bdLat:""+bdGeo.y
+				};
+				geoBaiduToAddr(bdGeo);
+				geoBaiduStaticImg(bdGeo);
+			}
+			function geoBaiduToAddr(baiduGeo) {
+				baiduGeo.toLatLngString=(function () {
+					return this.bdLat+","+this.bdLng;
+				}).bind(baiduGeo);
+				var script=document.createElement("script");
+				script.async=true;
+				script.onerror=function (e) {
+					log("error convert geolocation to address from baidu:",e);
+				};
+				script.src="http://api.map.baidu.com/geocoder/v2/?ak=27WpZtvmsCkUNPOrDuq3BrxuFCypaPX8&location="+baiduGeo.toLatLngString()+"&output=json&callback=showAddrFromBd";
+				document.body.appendChild(script);
+			}
+			function showAddrFromBd(addr) {
+				log("address:",addr);
+			}
+			function geoBaiduStaticImg(baiduGeo) {
+				var width=window.innerWidth,
+					height=window.innerHeight,
+					img=document.createElement("img");
+				img.onerror=function (e) {
+					log("error get static map:",e);
+				};
+				img.src="http://api.map.baidu.com/staticimage/v2?ak=27WpZtvmsCkUNPOrDuq3BrxuFCypaPX8&width="+width+"&height="+height+"&zoom=18&scale=1&center="+baiduGeo.bdLng+","+baiduGeo.bdLat;
+				document.body.appendChild(img);
+			}
+			
+			navigator.geolocation.getCurrentPosition(function(pos) {
+				log("position:",pos);
+				geoConv(pos.coords);
+			}, function(err) {
+				log("error:",err);
+			});
+		</script>
+	</body>
+
+</html>
