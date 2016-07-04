@@ -6,77 +6,142 @@
 		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
 		<title>EarthWar</title>
 		<style type="text/css">
-			html,body{
+			html,
+			body,
+			#container {
 				height: 100%;
 				padding: 0;
 				margin: 0;
+				overflow: hidden;
 			}
+			
+			p {
+				word-wrap: break-word;
+				word-break: break-all;
+			}
+			
+			#container {
+				position: relative;
+			}
+			
+			#container>* {
+				width: 100%;
+				height: 100%;
+			}
+			
+			#middleLay {
+				position: absolute;
+				top: 0;
+				left: 0;
+				background: radial-gradient(circle, rgba(240, 240, 240, 0.3) 40%, rgba(55, 55, 55, 0.5) 150%);
+				z-index: 50;
+			}
+			
+			#upperBox {
+				position: absolute;
+				top: 0;
+				left: 0;
+				z-index: 100;
+			}
+			
+			ul {
+				padding: 0;
+				margin: 0;
+				list-style-type: none;
+			}
+			
+			.grids {
+				width: 100%;
+				height: 100%;
+				overflow: hidden;
+			}
+			
+			.grid {
+				float: left;
+				width: 20%;
+				box-sizing: border-box;
+				/*background: rgba(255,0,0,0.3);*/
+				border: 1px dashed #999;
+			}
+			/*#mapLay{
+				position: absolute;
+				top: 0;
+				left: 0;
+				z-index: 9999;
+			}*/
 		</style>
 	</head>
 
 	<body>
-		<div id="container"></div>
+		<div id="container">
+			<div id="mapLay"></div>
+			<div id="middleLay"></div>
+			<div id="upperBox">
+				<ul class="grids"></ul>
+			</div>
+		</div>
 
+		<!--<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=27WpZtvmsCkUNPOrDuq3BrxuFCypaPX8"></script>-->
+		<script type="text/javascript" src="http://api.map.baidu.com/api?type=quick&ak=27WpZtvmsCkUNPOrDuq3BrxuFCypaPX8&v=1.0"></script>
+		<script src="computedStyles.js" type="text/javascript" charset="utf-8"></script>
+		<script src="baiduMap.js" type="text/javascript" charset="utf-8"></script>
 		<script type="text/javascript">
 			function log() {
-				var arg="";
-				for(var i=0,len=arguments.length;i<len;i++){
-					arg+=JSON.stringify(arguments[i])+"\t";
+				var arg = "";
+				for (var i = 0, len = arguments.length; i < len; i++) {
+					arg += JSON.stringify(arguments[i]) + "\t";
 				}
-				container.innerHTML+="<p>"+arg+"</p>";
+				container.innerHTML += "<p>" + arg + "</p>";
 			}
-			function geoConv(coords) {
-				var lng=coords.longitude,
-					lat=coords.latitude,
-					script=document.createElement("script");
-				script.async=true;
-				script.onerror=function (e) {
-					log("error get convertted geolocation from baidu:",e);
+
+
+			function getBaiduGeo(bdGeo) {
+				bdGeo = bdGeo.result[0];
+				bdGeo = {
+					bdLng: bdGeo.x,
+					bdLat: bdGeo.y
 				};
-				script.src="http://api.map.baidu.com/geoconv/v1/?coords="+lng+","+lat+"&from=1&to=5&ak=27WpZtvmsCkUNPOrDuq3BrxuFCypaPX8&callback=getBaiduGeo";
-				document.body.appendChild(script);
+				//				geoBaiduToAddr(bdGeo);
+				//				geoBaiduStaticImg(bdGeo);
+				var map = new BMap.Map("middleLay", {
+					enableMapClick: false
+				});
+				map.centerAndZoom(new BMap.Point(bdGeo.bdLng, bdGeo.bdLat), 15);
+				map.addControl(new BMap.ZoomControl());
+				map.addControl(new BMap.ScaleControl());
+
+				map.disableDragging();
 			}
-			function getBaiduGeo (bdGeo) {
-				bdGeo=bdGeo.result[0];
-				bdGeo={
-					bdLng:""+bdGeo.x,
-					bdLat:""+bdGeo.y
-				};
-				geoBaiduToAddr(bdGeo);
-				geoBaiduStaticImg(bdGeo);
-			}
+
 			function geoBaiduToAddr(baiduGeo) {
-				baiduGeo.toLatLngString=(function () {
-					return this.bdLat+","+this.bdLng;
+				baiduGeo.toLatLngString = (function() {
+					return this.bdLat + "," + this.bdLng;
 				}).bind(baiduGeo);
-				var script=document.createElement("script");
-				script.async=true;
-				script.onerror=function (e) {
-					log("error convert geolocation to address from baidu:",e);
+				var script = document.createElement("script");
+				script.async = true;
+				script.onerror = function(e) {
+					log("error convert geolocation to address from baidu:", e);
 				};
-				script.src="http://api.map.baidu.com/geocoder/v2/?ak=27WpZtvmsCkUNPOrDuq3BrxuFCypaPX8&location="+baiduGeo.toLatLngString()+"&output=json&callback=showAddrFromBd";
+				script.src = "http://api.map.baidu.com/geocoder/v2/?ak=27WpZtvmsCkUNPOrDuq3BrxuFCypaPX8&location=" + baiduGeo.toLatLngString() + "&output=json&callback=showAddrFromBd";
 				document.body.appendChild(script);
 			}
+
 			function showAddrFromBd(addr) {
-				log("address:",addr);
+				log("address:", addr);
 			}
+
 			function geoBaiduStaticImg(baiduGeo) {
-				var width=window.innerWidth,
-					height=window.innerHeight,
-					img=document.createElement("img");
-				img.onerror=function (e) {
-					log("error get static map:",e);
+				var width = window.innerWidth,
+					height = window.innerHeight,
+					img = document.createElement("img");
+				console.log(baiduGeo);
+				img.onerror = function(e) {
+					console.log("error get static map:", e);
 				};
-				img.src="http://api.map.baidu.com/staticimage/v2?ak=27WpZtvmsCkUNPOrDuq3BrxuFCypaPX8&width="+width+"&height="+height+"&zoom=18&scale=1&center="+baiduGeo.bdLng+","+baiduGeo.bdLat;
-				document.body.appendChild(img);
+				var url = "http://api.map.baidu.com/staticimage/v2?ak=27WpZtvmsCkUNPOrDuq3BrxuFCypaPX8&width=" + width + "&height=" + height + "&zoom=16&scale=1&markers=" + baiduGeo.bdLng + "," + baiduGeo.bdLat + "&markerStyles=l,A,0xFF0000&center=" + baiduGeo.center.bdLng + "," + baiduGeo.center.bdLat;
+				img.src = url;
+				container.insertBefore(img, middleLay);
 			}
-			
-			navigator.geolocation.getCurrentPosition(function(pos) {
-				log("position:",pos);
-				geoConv(pos.coords);
-			}, function(err) {
-				log("error:",err);
-			});
 		</script>
 	</body>
 
